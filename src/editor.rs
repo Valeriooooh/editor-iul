@@ -1,0 +1,125 @@
+mod file;
+use eframe::egui;
+use rfd;
+
+pub struct Settings {
+    pub font_size: u32,
+    pub theme: String,
+}
+pub struct Editor {
+    pub lang: String,
+    pub picked_path: String,
+    pub left_panel: bool,
+    pub code: String,
+}
+
+impl Default for Editor {
+    fn default() -> Self {
+        Self {
+            lang: String::from("java"),
+            left_panel: false,
+            picked_path: "untitled.txt".to_string(),
+            code: String::from(
+                "public class Test{
+    public static void main(String[] args){
+        System.out.println(\"hello world\")
+    }
+}",
+            ),
+        }
+    }
+}
+
+impl Editor {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        Self::default()
+    }
+}
+
+impl eframe::App for Editor {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            egui::menu::bar(ui, |ui| {
+                ui.menu_button("File", |ui| {
+                    if ui.button("Open").clicked() {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            let path = Some(path.display().to_string());
+                            match path {
+                                Some(a) => {
+                                    self.picked_path = a;
+                                    self.code = file::file_read(self.picked_path.clone());
+                                }
+                                None => {}
+                            }
+                        }
+                        // frame.close()
+                    }
+                    if ui.button("Save").clicked() {
+
+                        // frame.close()
+                    }
+                    if ui.button("Save as").clicked() {
+                        // frame.close()
+                    }
+                    if ui.button("Quit").clicked() {
+                        frame.close()
+                    }
+                });
+
+                ui.menu_button("Edit", |ui| {
+                    if ui.button("Undo").clicked() {
+                        // frame.close()
+                    }
+                    if ui.button("Redo").clicked() {
+                        // frame.close()
+                    }
+                    if ui.button("Preferences").clicked() {
+                        // frame.close()
+                    }
+                });
+            })
+        });
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            // let mut theme = syntax_highlighting::CodeTheme::from_memory(u);
+            // ui.collapsing("Theme", |ui| {
+            //     ui.group(|ui| {
+            //         theme.ui(ui);
+            //         theme.clone().store_in_memory(ui);
+            //     });
+            // });
+            if self.left_panel {
+                egui::SidePanel::left("side_panel").show_inside(ui, |ui| {
+                    ui.heading("Project Tree\t\t");
+                    ui.horizontal(|ui| {});
+                });
+            }
+
+            // let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
+            //     let mut layout_job = syntax_highlighting::highlight(ctx, &theme, string, language);
+            //     layout_job.wrap.max_width = wrap_width;
+            //     ui.fonts(|f| f.layout_job(layout_job))
+            // };
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.add(
+                    egui::TextEdit::multiline(&mut self.code)
+                        .font(egui::TextStyle::Monospace)
+                        .code_editor()
+                        .lock_focus(true)
+                        .desired_rows(70)
+                        .desired_width(f32::INFINITY),
+                );
+            });
+        });
+
+        egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+            egui::menu::bar(ui, |ui| {
+                if ui.button("show directory").clicked() {
+                    self.left_panel = !self.left_panel;
+                }
+
+                ui.label(format!("Lang: {}", self.lang));
+            });
+        });
+    }
+}
