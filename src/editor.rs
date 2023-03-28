@@ -1,4 +1,5 @@
 mod file;
+mod syntax_highlighting;
 use eframe::egui;
 use rfd;
 
@@ -143,19 +144,25 @@ impl eframe::App for Editor {
                 });
             }
 
-            // let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
-            //     let mut layout_job = syntax_highlighting::highlight(ctx, &theme, string, language);
-            //     layout_job.wrap.max_width = wrap_width;
-            //     ui.fonts(|f| f.layout_job(layout_job))
-            // };
             egui::ScrollArea::vertical().show(ui, |ui| {
+                let theme = syntax_highlighting::CodeTheme::dark();
+                let codeclone = &self.code.to_owned();
+                let mut layouter = |ui: &egui::Ui, _string: &str, _wrap_width: f32| {
+                    let mut layout_job =
+                        syntax_highlighting::highlight(ui.ctx(), &theme, codeclone, &self.lang);
+                    layout_job.wrap.max_width = f32::INFINITY;
+                    ui.fonts(|f| f.layout_job(layout_job))
+                };
+
                 ui.add(
                     egui::TextEdit::multiline(&mut self.code)
                         .font(egui::TextStyle::Monospace)
                         .code_editor()
                         .lock_focus(true)
                         .desired_rows(70)
-                        .desired_width(f32::INFINITY),
+                        .desired_width(f32::INFINITY)
+                        .layouter(&mut layouter)
+                        .id("CodeEditor".into()),
                 );
             });
         });
@@ -171,4 +178,8 @@ impl eframe::App for Editor {
             });
         });
     }
+}
+
+fn my_memoized_highlighter(s: &str) -> egui::text::LayoutJob {
+    Default::default()
 }
