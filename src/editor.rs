@@ -20,17 +20,11 @@ pub struct Editor {
 impl Default for Editor {
     fn default() -> Self {
         Self {
-            lang: String::from("java"),
+            lang: String::from("txt"),
             left_panel: false,
             saved: false,
             picked_path: "untitled.txt".to_string(),
-            code: String::from(
-                "public class Test{
-    public static void main(String[] args){
-        System.out.println(\"hello world\")
-    }
-}",
-            ),
+            code: String::from(""),
         }
     }
 }
@@ -41,13 +35,25 @@ impl Editor {
     }
 }
 
+// macro_rules! menu_button {
+//     ($text:expr,($($code:tt)) => {
+//         if ui.button($text).clicked() {
+//             $code
+//             $
+//         }
+
+//     };
+//     (_) => {};
+// }
+
 impl eframe::App for Editor {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Open").clicked() {
-                        file::file_open(self)
+                        file::file_open(self);
+                        ui.close_menu();
                     }
                     if ui.button("Save").clicked() {
                         if self.picked_path == Editor::default().picked_path {
@@ -58,9 +64,11 @@ impl eframe::App for Editor {
                                 Err(e) => println!("Error: {:?}", e),
                             };
                         }
+                        ui.close_menu();
                     }
                     if ui.button("Save as").clicked() {
-                        file::file_save(self)
+                        file::file_save(self);
+                        ui.close_menu();
                     }
                     if ui.button("Quit").clicked() {
                         frame.close()
@@ -68,15 +76,9 @@ impl eframe::App for Editor {
                 });
 
                 ui.menu_button("Edit", |ui| {
-                    if ui.button("Undo").clicked() {
-                        // frame.close()
-                    }
-                    if ui.button("Redo").clicked() {
-                        // frame.close()
-                    }
-                    if ui.button("Preferences").clicked() {
-                        // frame.close()
-                    }
+                    if ui.button("Undo").clicked() {}
+                    if ui.button("Redo").clicked() {}
+                    if ui.button("Preferences").clicked() {}
                 });
             })
         });
@@ -91,7 +93,6 @@ impl eframe::App for Editor {
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 let theme = syntax_highlighting::CodeTheme::dark();
-                let codeclone = &self.code.to_owned();
                 let mut layouter = |ui: &egui::Ui, _string: &str, _wrap_width: f32| {
                     let mut layout_job =
                         syntax_highlighting::highlight(ui.ctx(), &theme, _string, &self.lang);
