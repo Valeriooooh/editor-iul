@@ -2,6 +2,8 @@ mod file;
 use eframe::egui;
 use rfd;
 
+use self::file::file_save;
+
 pub struct Settings {
     pub font_size: u32,
     pub theme: String,
@@ -42,23 +44,69 @@ impl eframe::App for Editor {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Open").clicked() {
-                        if let Some(path) = rfd::FileDialog::new().pick_file() {
-                            let path = Some(path.display().to_string());
-                            match path {
-                                Some(a) => {
-                                    self.picked_path = a;
-                                    self.code = file::file_read(self.picked_path.clone());
+                        match rfd::FileDialog::new().pick_file() {
+                            Some(path) => {
+                                let path = Some(path.display().to_string());
+                                match path {
+                                    Some(a) => {
+                                        self.picked_path = a;
+                                        match file::file_read(self.picked_path.clone()) {
+                                            Ok(a) => self.code = a,
+                                            Err(e) => println!("Error: {:?}", e),
+                                        };
+                                    }
+                                    None => {}
                                 }
-                                None => {}
                             }
+                            _ => (),
                         }
-                        // frame.close()
                     }
                     if ui.button("Save").clicked() {
-
-                        // frame.close()
+                        if self.picked_path == Editor::default().picked_path {
+                            match rfd::FileDialog::new().save_file() {
+                                Some(path) => {
+                                    let path = Some(path.display().to_string());
+                                    match path {
+                                        Some(a) => {
+                                            self.picked_path = a;
+                                            match file_save(
+                                                self.picked_path.clone(),
+                                                self.code.clone(),
+                                            ) {
+                                                Ok(_) => {}
+                                                Err(e) => println!("Error: {:?}", e),
+                                            };
+                                        }
+                                        None => {}
+                                    }
+                                }
+                                _ => (),
+                            }
+                        } else {
+                            match file_save(self.picked_path.clone(), self.code.clone()) {
+                                Ok(_) => {}
+                                Err(e) => println!("Error: {:?}", e),
+                            };
+                        }
                     }
                     if ui.button("Save as").clicked() {
+                        match rfd::FileDialog::new().save_file() {
+                            Some(path) => {
+                                let path = Some(path.display().to_string());
+                                match path {
+                                    Some(a) => {
+                                        self.picked_path = a;
+                                        match file_save(self.picked_path.clone(), self.code.clone())
+                                        {
+                                            Ok(_) => {}
+                                            Err(e) => println!("Error: {:?}", e),
+                                        };
+                                    }
+                                    None => {}
+                                }
+                            }
+                            _ => (),
+                        }
                         // frame.close()
                     }
                     if ui.button("Quit").clicked() {
@@ -119,6 +167,7 @@ impl eframe::App for Editor {
                 }
 
                 ui.label(format!("Lang: {}", self.lang));
+                ui.label(format!("File: {}", self.picked_path));
             });
         });
     }
