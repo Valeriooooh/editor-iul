@@ -1,20 +1,26 @@
 mod file;
 mod syntax_highlighting;
-use eframe::egui;
-use rfd;
+use std::fs;
 
-use self::file::file_write;
+use eframe::{egui, epaint::FontId};
+
+use self::{
+    file::{file_write, scan_dir},
+    syntax_highlighting::CodeTheme,
+};
 
 pub struct Settings {
-    pub font_size: u32,
-    pub theme: String,
+    pub font_size: f32,
+    pub theme: CodeTheme,
 }
 pub struct Editor {
     pub lang: String,
     pub picked_path: String,
     pub left_panel: bool,
+    pub settings_panel: bool,
     pub code: String,
     pub saved: bool,
+    pub settings: Settings,
 }
 
 impl Default for Editor {
@@ -22,9 +28,14 @@ impl Default for Editor {
         Self {
             lang: String::from("txt"),
             left_panel: false,
+            settings_panel: false,
             saved: false,
             picked_path: "untitled.txt".to_string(),
             code: String::from(""),
+            settings: Settings {
+                font_size: 15.,
+                theme: CodeTheme::dark(),
+            },
         }
     }
 }
@@ -39,7 +50,7 @@ impl Editor {
 //     ($text:expr,($($code:tt)) => {
 //         if ui.button($text).clicked() {
 //             $code
-//             $
+//             ui.close_menu();
 //         }
 
 //     };
@@ -52,7 +63,7 @@ impl eframe::App for Editor {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Open").clicked() {
-                        file::file_open(self);
+                        file::file_picker(self);
                         ui.close_menu();
                     }
                     if ui.button("Save").clicked() {
@@ -75,19 +86,43 @@ impl eframe::App for Editor {
                     }
                 });
 
+                ui.separator();
                 ui.menu_button("Edit", |ui| {
                     if ui.button("Undo").clicked() {}
                     if ui.button("Redo").clicked() {}
-                    if ui.button("Preferences").clicked() {}
+                    if ui.button("Preferences").clicked() {
+                        self.left_panel = true;
+                        self.settings_panel = true;
+                    }
+                });
+                ui.separator();
+                ui.menu_button("Help", |ui| {
+                    if ui.button("About").clicked() {}
+                    if ui.button("Licence").clicked() {
+                        egui::Window::new("Licence").show(ctx, |ui| {
+                            ui.label("teste");
+                        });
+                    }
                 });
             })
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             if self.left_panel {
+                // TODO fazer função que retorna a arvore de ficheiros para saber quais são pastas e ficheiros:
+                // possivel implementação fic(stream) json (usar serde)
                 egui::SidePanel::left("side_panel").show_inside(ui, |ui| {
-                    ui.heading("Project Tree\t\t");
-                    ui.horizontal(|ui| {});
+                    if !(self.settings_panel) {
+                        ui.heading("Project Tree\t\t\t");
+                        ui.horizontal(|ui| {
+                            ui.collapsing("Files", |ui| {
+                                scan_dir(".".to_string(), ui, self);
+                            });
+                        });
+                    } else {
+                        ui.heading("Preferences\t\t\t");
+                        ui.group(|ui| {});
+                    }
                 });
             }
 
@@ -99,7 +134,16 @@ impl eframe::App for Editor {
                     layout_job.wrap.max_width = _wrap_width;
                     ui.fonts(|f| f.layout_job(layout_job))
                 };
-
+                // let mut style = (*ctx.style()).clone();
+                // style.text_styles = [
+                //     (egui::TextStyle::Heading, FontId::new(30.0, Proportional)),
+                //     (egui::TextStyle::Body, FontId::new(18.0, Proportional)),
+                //     (egui::TextStyle::Monospace, FontId::new(14.0, Proportional)),
+                //     (egui::TextStyle::Button, FontId::new(14.0, Proportional)),
+                //     (egui::TextStyle::Small, FontId::new(10.0, Proportional)),
+                // ]
+                // .into();
+                // ctx.set_style(style);
                 ui.add(
                     egui::TextEdit::multiline(&mut self.code)
                         .font(egui::TextStyle::Monospace)
@@ -116,11 +160,16 @@ impl eframe::App for Editor {
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 if ui.button("show directory").clicked() {
-                    self.left_panel = !self.left_panel;
+                    if !(self.settings_panel) {
+                        self.left_panel = !self.left_panel;
+                    }
+                    self.settings_panel = false;
                 }
 
-                ui.label(format!("Lang: {}", self.lang));
+                ui.separator();
                 ui.label(format!("File: {}", self.picked_path));
+                ui.separator();
+                ui.label(format!("Lang: {}", self.lang));
             });
         });
     }
