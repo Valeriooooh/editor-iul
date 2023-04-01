@@ -99,7 +99,7 @@ pub fn scan_dir(begin: String, ui: &mut egui::Ui, ed: &mut Editor) {
                     Some(a) => {
                         if file.path().is_dir() {
                             egui::CollapsingHeader::new(format!(
-                                "📁{}",
+                                "🗁 {}",
                                 match a.to_str() {
                                     Some(a) => a,
                                     None => {
@@ -110,7 +110,13 @@ pub fn scan_dir(begin: String, ui: &mut egui::Ui, ed: &mut Editor) {
                             .show(ui, |ui| scan_dir(file.path().display().to_string(), ui, ed));
                         } else {
                             if (ui.button(format!(
-                                "{}",
+                                "{}{}",
+                                get_lang_icon({
+                                    match file.path().extension().and_then(OsStr::to_str) {
+                                        Some(a) => a,
+                                        None => " ",
+                                    }
+                                }),
                                 match a.to_str() {
                                     Some(a) => a,
                                     None => {
@@ -130,4 +136,12 @@ pub fn scan_dir(begin: String, ui: &mut egui::Ui, ed: &mut Editor) {
         }
         Err(_) => {}
     };
+}
+
+fn get_lang_icon(extension: &str) -> &str {
+    match extension {
+        "rs" => "🦀",
+        "java" => "🍵",
+        _ => " ",
+    }
 }

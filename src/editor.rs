@@ -1,8 +1,10 @@
 mod file;
+// mod shortcuts;
 mod syntax_highlighting;
-use std::fs;
 
-use eframe::{egui, epaint::FontId};
+use std::path::PathBuf;
+
+use eframe::egui::{self, gui_zoom::zoom_in};
 
 use self::{
     file::{file_write, scan_dir},
@@ -16,6 +18,7 @@ pub struct Settings {
 pub struct Editor {
     pub lang: String,
     pub picked_path: String,
+    pub project_path: Option<String>,
     pub left_panel: bool,
     pub settings_panel: bool,
     pub code: String,
@@ -31,6 +34,7 @@ impl Default for Editor {
             settings_panel: false,
             saved: false,
             picked_path: "untitled.txt".to_string(),
+            project_path: None,
             code: String::from(""),
             settings: Settings {
                 font_size: 15.,
@@ -41,21 +45,21 @@ impl Default for Editor {
 }
 
 impl Editor {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        Self::default()
+    pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
+        match path {
+            Some(a) => {
+                let mut ed = Self {
+                    picked_path: String::from(a.into_os_string().into_string().unwrap()),
+                    ..Default::default()
+                };
+                let pick = ed.picked_path.clone();
+                file::file_open(&mut ed, pick);
+                ed
+            }
+            None => Self::default(),
+        }
     }
 }
-
-// macro_rules! menu_button {
-//     ($text:expr,($($code:tt)) => {
-//         if ui.button($text).clicked() {
-//             $code
-//             ui.close_menu();
-//         }
-
-//     };
-//     (_) => {};
-// }
 
 impl eframe::App for Editor {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
@@ -149,7 +153,7 @@ impl eframe::App for Editor {
                         .font(egui::TextStyle::Monospace)
                         .code_editor()
                         .lock_focus(true)
-                        .desired_rows(70)
+                        .desired_rows(68)
                         .desired_width(f32::INFINITY)
                         .layouter(&mut layouter)
                         .id("CodeEditor".into()),
@@ -173,8 +177,4 @@ impl eframe::App for Editor {
             });
         });
     }
-}
-
-fn my_memoized_highlighter(s: &str) -> egui::text::LayoutJob {
-    Default::default()
 }
