@@ -72,6 +72,19 @@ pub fn file_picker(ed: &mut Editor) {
         _ => (),
     }
 }
+
+pub fn project_picker(ed: &mut Editor) {
+    match rfd::FileDialog::new().pick_folder() {
+        Some(path) => {
+            let path = Some(path.display().to_string());
+            match path {
+                Some(a) => ed.project_path = Some(a),
+                None => {}
+            }
+        }
+        _ => (),
+    }
+}
 pub fn file_save(ed: &mut Editor) {
     match rfd::FileDialog::new().save_file() {
         Some(path) => {
@@ -142,6 +155,7 @@ fn get_lang_icon(extension: &str) -> &str {
     match extension {
         "rs" => "🦀",
         "java" => "🍵",
+        "kt" => "",
         _ => " ",
     }
 }

@@ -10,6 +10,6 @@ fn main() {
     eframe::run_native(
         "editor-iul",
         native_options,
-        Box::new(|cc| Box::new(Editor::new(cc, args.path))),
+        Box::new(|cc| Box::new(Editor::new(cc, args.file_path))),
     );
 }
