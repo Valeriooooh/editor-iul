@@ -107,47 +107,49 @@ pub fn scan_dir(begin: String, ui: &mut egui::Ui, ed: &mut Editor) {
     let _ = match std::fs::read_dir(begin) {
         Ok(a) => {
             for i in a {
-                let file = i.unwrap();
-                match file.path().file_name() {
-                    Some(a) => {
-                        if file.path().is_dir() {
-                            egui::CollapsingHeader::new(format!(
-                                "🗁 {}",
-                                match a.to_str() {
-                                    Some(a) => a,
-                                    None => {
-                                        ""
-                                    }
-                                }
-                            ))
-                            .show(ui, |ui| scan_dir(file.path().display().to_string(), ui, ed));
-                        } else {
-                            if (ui.button(format!(
-                                "{}{}",
-                                get_lang_icon({
-                                    match file.path().extension().and_then(OsStr::to_str) {
+                match i {
+                    Ok(file) => match file.path().file_name() {
+                        Some(a) => {
+                            if file.path().is_dir() {
+                                egui::CollapsingHeader::new(format!(
+                                    "🗁 {}",
+                                    match a.to_str() {
                                         Some(a) => a,
-                                        None => " ",
+                                        None => {
+                                            ""
+                                        }
                                     }
-                                }),
-                                match a.to_str() {
-                                    Some(a) => a,
-                                    None => {
-                                        ""
+                                ))
+                                .show(ui, |ui| scan_dir(file.path().display().to_string(), ui, ed));
+                            } else {
+                                if (ui.button(format!(
+                                    "{}{}",
+                                    get_lang_icon({
+                                        match file.path().extension().and_then(OsStr::to_str) {
+                                            Some(a) => a,
+                                            None => " ",
+                                        }
+                                    }),
+                                    match a.to_str() {
+                                        Some(a) => a,
+                                        None => {
+                                            ""
+                                        }
                                     }
+                                )))
+                                .clicked()
+                                {
+                                    file_open(ed, file.path().display().to_string());
                                 }
-                            )))
-                            .clicked()
-                            {
-                                file_open(ed, file.path().display().to_string());
                             }
                         }
-                    }
-                    None => {}
+                        None => {}
+                    },
+                    Err(_) => {}
                 }
             }
         }
-        Err(_) => {}
+        Err(_) => todo!(),
     };
 }
 
