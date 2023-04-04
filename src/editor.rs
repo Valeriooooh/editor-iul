@@ -1,5 +1,6 @@
 mod app;
 mod file;
+mod shortcuts;
 mod syntax_highlighting;
 use std::path::PathBuf;
 
@@ -44,6 +45,7 @@ impl Default for Editor {
     }
 }
 
+#[allow(dead_code, unused_variables)]
 impl Editor {
     fn startup(&mut self, ctx: &egui::Context) {
         if self.settings.is_startup {
@@ -100,6 +102,7 @@ impl Editor {
             self.settings.is_startup = false;
         }
     }
+
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
         match path {
             Some(a) => {

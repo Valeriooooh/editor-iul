@@ -7,7 +7,7 @@ fn main() {
     let native_options = eframe::NativeOptions::default();
     let args = cli::Cli::from_args();
     println!("{:?}", args);
-    eframe::run_native(
+    let _ = eframe::run_native(
         "editor-iul",
         native_options,
         Box::new(|cc| Box::new(Editor::new(cc, args.file_path))),

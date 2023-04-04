@@ -15,6 +15,7 @@ impl Default for Highlighter {
     }
 }
 
+#[allow(dead_code)]
 impl Highlighter {
     #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
     fn highlight(&self, theme: &CodeTheme, code: &str, lang: &str) -> LayoutJob {
@@ -82,6 +83,7 @@ impl Highlighter {
     }
 }
 /// View some code with syntax highlighting and selection.
+#[allow(dead_code)]
 pub fn code_view_ui(ui: &mut egui::Ui, mut code: &str) {
     let language = "rs";
     let theme = CodeTheme::from_memory(ui.ctx());
@@ -121,6 +123,7 @@ pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, code: &str, language: &
 
 // ----------------------------------------------------------------------------
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Hash, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 enum SyntectTheme {
@@ -132,7 +135,7 @@ enum SyntectTheme {
     SolarizedDark,
     SolarizedLight,
 }
-
+#[allow(dead_code)]
 impl SyntectTheme {
     fn all() -> impl ExactSizeIterator<Item = Self> {
         [
@@ -197,7 +200,7 @@ impl Default for CodeTheme {
         Self::dark()
     }
 }
-
+#[allow(dead_code)]
 impl CodeTheme {
     pub fn from_style(style: &egui::Style) -> Self {
         if style.visuals.dark_mode {
@@ -229,7 +232,7 @@ impl CodeTheme {
         }
     }
 }
-
+#[allow(dead_code)]
 impl CodeTheme {
     pub fn dark() -> Self {
         Self {

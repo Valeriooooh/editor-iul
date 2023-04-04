@@ -92,7 +92,10 @@ pub fn file_save(ed: &mut Editor) {
             match path {
                 Some(a) => {
                     match file_write(ed.picked_path.clone(), ed.code.clone()) {
-                        Ok(_) => ed.picked_path = a,
+                        Ok(_) => {
+                            ed.picked_path = a;
+                            ed.saved = true
+                        }
                         Err(e) => println!("Error: {:?}", e),
                     };
                 }

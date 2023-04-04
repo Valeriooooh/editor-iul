@@ -10,3 +10,5 @@ eframe = "*"
 syntect = "*"
 rfd="*"
 structopt ="*"
+# egui-keybinds = "*"
+# ssss

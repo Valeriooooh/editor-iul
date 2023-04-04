@@ -1,8 +1,9 @@
 use eframe::egui::{self, Visuals};
+// use egui_keybinds::KeyBindWidget;
 
 use super::{
     file::{self, file_write, scan_dir},
-    syntax_highlighting, Editor,
+    shortcuts, syntax_highlighting, Editor,
 };
 
 impl eframe::App for Editor {
@@ -13,6 +14,7 @@ impl eframe::App for Editor {
         } else {
             ctx.set_visuals(Visuals::dark())
         }
+
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 if ui.button("show directory").clicked() {
@@ -23,7 +25,14 @@ impl eframe::App for Editor {
                 }
 
                 ui.separator();
-                ui.label(format!("File: {}", self.picked_path));
+                match self.saved {
+                    true => {
+                        ui.label(format!("File: {}", self.picked_path));
+                    }
+                    false => {
+                        ui.label(format!("File: {}*", self.picked_path));
+                    }
+                }
                 ui.separator();
                 ui.label(format!("Lang: {}", self.lang));
             });
@@ -44,7 +53,7 @@ impl eframe::App for Editor {
                             file::file_save(self)
                         } else {
                             match file_write(self.picked_path.clone(), self.code.clone()) {
-                                Ok(_) => {}
+                                Ok(_) => self.saved = true,
                                 Err(e) => println!("Error: {:?}", e),
                             };
                         }
@@ -88,15 +97,15 @@ impl eframe::App for Editor {
                         egui::ScrollArea::vertical().show(ui, |ui| {
                             if !(self.settings_panel) {
                                 ui.heading("Project Tree\t\t\t");
-                                ui.horizontal(|ui| {
-                                    ui.collapsing("Files", |ui| match self.project_path.clone() {
-                                        Some(a) => scan_dir(a.to_string(), ui, self),
-                                        None => scan_dir(".".to_string(), ui, self),
-                                    });
+                                ui.vertical(|ui| match self.project_path.clone() {
+                                    // ui.collapsing("Files", |ui|  {
+                                    Some(a) => scan_dir(a.to_string(), ui, self),
+                                    None => scan_dir(".".to_string(), ui, self),
+                                    // });
                                 });
                             } else {
                                 ui.heading("Preferences\t\t\t");
-                                ui.group(|ui| {
+                                ui.vertical(|ui| {
                                     ui.add(egui::Checkbox::new(
                                         &mut self.settings.dark_mode,
                                         "Dark Mode",
@@ -118,16 +127,22 @@ impl eframe::App for Editor {
                     layout_job.wrap.max_width = _wrap_width;
                     ui.fonts(|f| f.layout_job(layout_job))
                 };
-                ui.add(
-                    egui::TextEdit::multiline(&mut self.code)
-                        .font(egui::TextStyle::Monospace)
-                        .code_editor()
-                        .lock_focus(true)
-                        .desired_rows(48)
-                        .desired_width(f32::INFINITY)
-                        .layouter(&mut layouter)
-                        .id("CodeEditor".into()),
-                );
+                if ui
+                    .add(
+                        egui::TextEdit::multiline(&mut self.code)
+                            .font(egui::TextStyle::Monospace)
+                            .code_editor()
+                            .lock_focus(true)
+                            .desired_rows(48)
+                            .desired_width(f32::INFINITY)
+                            .layouter(&mut layouter)
+                            .id("CodeEditor".into()),
+                    )
+                    .changed()
+                {
+                    self.saved = false;
+                }
+                shortcuts::set_default_shortcuts(ui, self, frame);
             });
         });
     }
